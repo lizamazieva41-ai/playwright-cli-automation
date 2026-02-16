@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.1] - 2026-02-16
+
+### Fixed
+- CLI output noisy - moved proxy-manager and notifier logs from info/warn to debug level
+- Security vulnerability - updated nodemailer to v8.0.1
+
+### Added
+- ESLint configuration with `.eslintrc.json`
+- Lint scripts: `npm run lint` and `npm run lint:fix`
+- Husky pre-commit hooks with lint-staged
+- GitHub Actions CI/CD workflow (`.github/workflows/ci.yml`)
+- Package metadata: author, repository, homepage, bugs, files fields
+
+### Changed
+- Updated `prepublishOnly` script to run tests before publishing
+- Package files field to specify included files in npm package
+
 ## [1.0.0] - 2026-02-16
 
 ### Added

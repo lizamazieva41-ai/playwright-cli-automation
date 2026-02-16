@@ -1,6 +1,6 @@
 {
   "name": "playwright-cli-automation",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "CLI browser automation with Playwright - Firefox, stealth, proxy, parallel execution",
   "main": "src/index.js",
   "bin": {
