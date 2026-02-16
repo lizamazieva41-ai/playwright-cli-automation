@@ -6,6 +6,7 @@
 const pLimit = require('p-limit');
 const config = require('../../config/default');
 const logger = require('../logger/logger');
+const { createProgressBar } = require('../utils/progress');
 
 class TaskRunner {
   constructor() {
@@ -19,10 +20,32 @@ class TaskRunner {
    * @param {number} concurrency - Max concurrent tasks
    * @returns {Promise<Array>} Array of task results
    */
-  async runParallel(tasks, concurrency) {
+  async runParallel(tasks, concurrency, showProgress = true) {
     const limit = pLimit(concurrency || this.concurrency);
+    const totalTasks = tasks.length;
     
-    logger.info(`Starting ${tasks.length} tasks with concurrency ${concurrency || this.concurrency}`);
+    logger.info(`Starting ${totalTasks} tasks with concurrency ${concurrency || this.concurrency}`);
+    
+    // Create progress bar if enabled
+    let progressBar = null;
+    let passed = 0;
+    let failed = 0;
+    
+    if (showProgress && !process.env.CI) {
+      progressBar = createProgressBar(totalTasks);
+      progressBar.start(totalTasks, 0, { passed: 0, failed: 0 });
+    }
+    
+    const updateProgress = (success) => {
+      if (success) passed++;
+      else failed++;
+      if (progressBar) {
+        progressBar.update(progressBar.getTotal() - tasks.filter((_, i) => !this._completedTasks?.[i]).length, { passed, failed });
+      }
+    };
+    
+    // Track completed tasks
+    this._completedTasks = [];
     
     const taskPromises = tasks.map((task, index) => 
       limit(async () => {
@@ -33,6 +56,8 @@ class TaskRunner {
           const duration = Date.now() - startTime;
           
           logger.debug(`Task ${index + 1} completed in ${duration}ms`);
+          this._completedTasks[index] = true;
+          updateProgress(true);
           return {
             index,
             success: true,
@@ -42,6 +67,8 @@ class TaskRunner {
           };
         } catch (error) {
           logger.error(`Task ${index + 1} failed:`, error);
+          this._completedTasks[index] = true;
+          updateProgress(false);
           return {
             index,
             success: false,
@@ -54,6 +81,10 @@ class TaskRunner {
     );
 
     const results = await Promise.all(taskPromises);
+    
+    if (progressBar) {
+      progressBar.stop();
+    }
     
     const successCount = results.filter(r => r.success).length;
     const failedCount = results.filter(r => !r.success).length;

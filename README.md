@@ -203,40 +203,58 @@ node src/index.js run -t task.json
 ```
 automatic/
 ├── src/
-│   ├── index.js              # Entry point
+│   ├── index.js              # Entry point with CLI setup
 │   ├── cli/commands/         # CLI commands
-│   │   ├── login.js
-│   │   ├── scrape.js
-│   │   ├── test.js
-│   │   └── run.js
+│   │   ├── login.js         # Save login session
+│   │   ├── scrape.js        # Scrape data from websites
+│   │   ├── test.js          # Run web tests/checks
+│   │   ├── run.js           # Execute comprehensive tasks
+│   │   ├── session.js       # Manage sessions (list/info/delete/validate)
+│   │   └── proxy.js        # Manage proxies (list/test/add/remove)
 │   ├── core/
-│   │   ├── browser-manager.js
-│   │   └── task-runner.js
+│   │   ├── browser-manager.js  # Browser lifecycle management
+│   │   ├── task-runner.js     # Parallel task execution
+│   │   └── page-actions.js    # Reusable page actions
 │   ├── session/
-│   │   └── session-manager.js
+│   │   └── session-manager.js # Session storage (cookies, localStorage)
 │   ├── stealth/
-│   │   ├── stealth.js
-│   │   ├── user-agents.js
-│   │   └── human-behavior.js
+│   │   ├── stealth.js         # Anti-bot detection
+│   │   ├── user-agents.js    # User-Agent rotation
+│   │   └── human-behavior.js # Human-like behavior simulation
 │   ├── proxy/
-│   │   └── proxy-manager.js
+│   │   └── proxy-manager.js  # Proxy rotation and management
 │   ├── scraper/
-│   │   └── scraper.js
+│   │   └── scraper.js        # Web scraping logic
 │   ├── logger/
-│   │   └── logger.js
+│   │   └── logger.js         # Winston logging
 │   ├── notifier/
-│   │   ├── notifier.js
-│   │   ├── email.js
-│   │   └── slack.js
-│   └── storage/
-│       └── storage.js
+│   │   ├── notifier.js      # Notification dispatcher
+│   │   ├── email.js         # Email notifications
+│   │   └── slack.js         # Slack notifications
+│   ├── storage/
+│   │   └── storage.js       # JSON/CSV storage
+│   └── utils/
+│       └── progress.js      # CLI progress bar
 ├── config/
-│   └── default.js
+│   └── default.js          # Default configuration
+├── tests/
+│   ├── unit/               # Unit tests
+│   │   ├── session-manager.test.js
+│   │   ├── proxy-manager.test.js
+│   │   ├── storage.test.js
+│   │   ├── stealth.test.js
+│   │   ├── user-agents.test.js
+│   │   └── human-behavior.test.js
+│   └── integration/         # Integration tests
+├── examples/               # Sample configuration files
 ├── data/
-│   ├── sessions/
-│   ├── output/
-│   └── logs/
-└── package.json
+│   ├── sessions/           # Stored browser sessions
+│   ├── output/             # Scraped data output
+│   └── logs/               # Log files
+├── package.json
+├── jest.config.js          # Jest test configuration
+├── CHANGELOG.md            # Version history
+└── .env.example           # Environment variables template
 ```
 
 ## PM2 Deployment
@@ -268,6 +286,180 @@ pm2 start ecosystem.config.js
 pm2 logs
 pm2 stop all
 ```
+
+## Troubleshooting
+
+### Playwright Installation Issues
+
+If Playwright fails to install:
+```bash
+# Install Playwright browsers manually
+npx playwright install firefox
+
+# On macOS, you may need to accept licenses
+sudo softwareupdate --install-rosetta
+```
+
+### Proxy Connection Timeout
+
+If proxy times out:
+- Verify proxy format: `socks5://user:pass@host:port`
+- Test proxy separately before using
+- Increase timeout in config: `BROWSER_TIMEOUT=60000`
+
+### Session Expired
+
+If sessions expire unexpectedly:
+- Use `session validate <name> --check-expiry` to check
+- Re-create login session if expired
+- Adjust `SESSION_DEFAULT_EXPIRY_DAYS` in `.env`
+
+### Memory Issues
+
+If running out of memory with parallel tasks:
+- Reduce `--parallel` value
+- Set `MAX_CONCURRENCY=2` in `.env`
+- Use `--headless` mode (default)
+
+### Browser Detection
+
+If being detected as bot:
+- Use stealth mode (enabled by default)
+- Add proxies for rotation
+- Check `src/stealth/` modules for customization
+
+## Development Guide
+
+### Running Tests
+
+```bash
+# Run all tests
+npm test
+
+# Run unit tests only
+npm run test:unit
+
+# Run integration tests only
+npm run test:integration
+
+# Run specific test file
+npx jest tests/unit/proxy-manager.test.js
+```
+
+### Project Structure
+
+- `src/cli/commands/` - CLI command implementations
+- `src/core/` - Core modules (browser, task-runner)
+- `src/stealth/` - Anti-detection modules
+- `src/utils/` - Utility functions (progress, validation)
+- `config/default.js` - Configuration
+- `tests/` - Test files
+
+### Coding Conventions
+
+- Use ES6+ features
+- Async/await for asynchronous operations
+- JSDoc comments for functions
+- Jest for testing
+
+### Adding New Commands
+
+1. Create file in `src/cli/commands/`
+2. Use Commander.js for CLI parsing
+3. Export Command object
+4. Register in `src/index.js`
+
+### Adding New Test Types
+
+1. Add validation in `src/utils/validation.js`
+2. Add test implementation in relevant command
+3. Add tests in `tests/`
+
+## API Reference
+
+### Core Modules
+
+#### BrowserManager (`src/core/browser-manager.js`)
+```javascript
+const browserManager = require('./src/core/browser-manager');
+
+// Create browser session
+const session = await browserManager.createBrowserSession({
+  proxy: 'socks5://host:port',
+  storageState: '/path/to/session',
+  headless: false
+});
+
+// Close all
+await browserManager.closeAll();
+```
+
+#### TaskRunner (`src/core/task-runner.js`)
+```javascript
+const taskRunner = require('./src/core/task-runner');
+
+// Run parallel tasks
+const results = await taskRunner.runParallel(tasks, 3);
+
+// Run with retry
+const results = await taskRunner.runWithRetry(tasks, 3, 3);
+```
+
+#### SessionManager (`src/session/session-manager.js`)
+```javascript
+const sessionManager = require('./src/session/session-manager');
+
+// Save session
+const path = await sessionManager.saveSession(context, 'myprofile');
+
+// Load session
+const sessionPath = sessionManager.loadSession('myprofile');
+
+// List sessions
+const sessions = sessionManager.listSessions();
+```
+
+#### ProxyManager (`src/proxy/proxy-manager.js`)
+```javascript
+const proxyManager = require('./src/proxy/proxy-manager');
+
+// Add proxy
+proxyManager.addProxy('socks5://host:port');
+
+// Get next proxy (round-robin)
+const proxy = proxyManager.getNextProxy();
+
+// Get random proxy
+const proxy = proxyManager.getRandomProxy();
+```
+
+### Validation Utils (`src/utils/validation.js`)
+```javascript
+const { validateScrapeConfig, validateTaskConfig, validateProxy } = 
+  require('./src/utils/validation');
+
+// Validate scrape config
+const result = validateScrapeConfig({ url: 'https://example.com' });
+// result: { valid: true, errors: [] }
+
+// Validate proxy format
+const result = validateProxy('socks5://host:8080');
+// result: { valid: true, error: null }
+```
+
+### Configuration
+
+Configuration is loaded from:
+1. `config/default.js` (defaults)
+2. `.env` file (environment variables)
+3. Command line arguments (highest priority)
+
+Key config sections:
+- `browser` - Browser settings
+- `paths` - Directory paths
+- `proxy` - Proxy list
+- `taskRunner` - Concurrency settings
+- `smtp` / `slack` - Notifications
 
 ## License
 

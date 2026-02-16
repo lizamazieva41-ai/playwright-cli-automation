@@ -115,11 +115,15 @@ class BrowserManager {
    * @returns {Promise<{browser: Browser, context: BrowserContext, page: Page}>}
    */
   async createBrowserSession(options = {}) {
-    const browser = await this.launchBrowser(options);
+    // Reuse existing browser if already launched and connected
+    if (!this.browser || !this.browser.isConnected()) {
+      await this.launchBrowser(options);
+    }
+    
     const context = await this.createContext(options);
     const page = await this.createPage(context);
 
-    return { browser, context, page };
+    return { browser: this.browser, context, page };
   }
 
   /**

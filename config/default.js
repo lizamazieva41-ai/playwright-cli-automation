@@ -3,6 +3,7 @@
  * Central configuration for the Playwright CLI Automation tool
  */
 
+const fs = require('fs');
 const path = require('path');
 
 // Resolve paths relative to project root
@@ -82,5 +83,19 @@ const config = {
     webhookUrl: process.env.SLACK_WEBHOOK_URL || '',
   },
 };
+
+// Auto-create required directories if they don't exist
+const dirsToCreate = [
+  config.paths.data,
+  config.paths.sessions,
+  config.paths.output,
+  config.paths.logs,
+];
+
+dirsToCreate.forEach(dir => {
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+});
 
 module.exports = config;

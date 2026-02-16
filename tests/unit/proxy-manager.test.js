@@ -22,7 +22,7 @@ describe('ProxyManager', () => {
       }
     }));
     
-    jest.doMock('../logger/logger', () => ({
+    jest.doMock('../../src/logger/logger', () => ({
       debug: jest.fn(),
       info: jest.fn(),
       warn: jest.fn(),

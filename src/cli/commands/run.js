@@ -219,38 +219,152 @@ async function executeScrape(config, options) {
  * @returns {Promise<Object>} Test result
  */
 async function executeTest(config, options) {
+  let context = null;
+  
   try {
     const browserSession = await browserManager.createBrowserSession({
       proxy: options.proxy || config.proxy,
       headless: !options.headful,
     });
     
+    context = browserSession.context;
     await browserSession.page.goto(config.url, { waitUntil: 'networkidle' });
     
-    // Run basic checks
+    // Run checks - support all check types
     const checks = config.checks || [];
     let passed = 0;
     let failed = 0;
+    const results = [];
     
     for (const check of checks) {
-      // Simple title check as default
-      if (check.type === 'title') {
-        const title = await browserSession.page.title();
-        if (title) passed++;
-        else failed++;
+      const result = await runCheck(browserSession.page, check);
+      results.push(result);
+      
+      if (result.passed) {
+        passed++;
+      } else {
+        failed++;
       }
     }
     
-    await browserSession.context.close();
+    await context.close();
     
     return {
       success: failed === 0,
       passed,
       failed,
+      results,
     };
   } catch (error) {
+    if (context) {
+      await context.close();
+    }
     return {
       success: false,
+      error: error.message,
+    };
+  }
+}
+
+/**
+ * Run a single check on the page
+ * @param {Page} page - Playwright page
+ * @param {Object} check - Check configuration
+ * @returns {Promise<Object>} Check result
+ */
+async function runCheck(page, check) {
+  try {
+    switch (check.type) {
+      case 'title':
+        const title = await page.title();
+        if (check.expected) {
+          return {
+            type: check.type,
+            passed: title.includes(check.expected),
+            actual: title,
+            expected: check.expected,
+            error: title.includes(check.expected) ? null : `Title "${title}" does not contain "${check.expected}"`,
+          };
+        }
+        return {
+          type: check.type,
+          passed: !!title,
+          actual: title,
+          error: null,
+        };
+        
+      case 'status':
+        const response = await page.evaluate(() => {
+          return window.performance?.getEntriesByType('navigation')[0]?.responseStatus || 200;
+        });
+        return {
+          type: check.type,
+          passed: response === check.expected,
+          actual: response,
+          expected: check.expected,
+          error: response === check.expected ? null : `Status ${response} does not match ${check.expected}`,
+        };
+        
+      case 'selector':
+        const element = await page.$(check.selector);
+        return {
+          type: check.type,
+          passed: !!element,
+          actual: element ? 'found' : 'not found',
+          expected: check.selector,
+          error: element ? null : `Selector "${check.selector}" not found`,
+        };
+        
+      case 'text':
+        const text = await page.textContent(check.selector);
+        return {
+          type: check.type,
+          passed: text?.includes(check.expected),
+          actual: text,
+          expected: check.expected,
+          error: text?.includes(check.expected) ? null : `Text "${text}" does not contain "${check.expected}"`,
+        };
+        
+      case 'attribute':
+        const attr = await page.getAttribute(check.selector, check.attribute);
+        return {
+          type: check.type,
+          passed: attr === check.expected,
+          actual: attr,
+          expected: check.expected,
+          error: attr === check.expected ? null : `Attribute ${check.attribute} is "${attr}" instead of "${check.expected}"`,
+        };
+        
+      case 'visible':
+        const isVisible = await page.isVisible(check.selector);
+        return {
+          type: check.type,
+          passed: isVisible === (check.expected !== false),
+          actual: isVisible ? 'visible' : 'hidden',
+          expected: check.expected !== false ? 'visible' : 'hidden',
+          error: isVisible === (check.expected !== false) ? null : `Element is ${isVisible ? 'visible' : 'hidden'}`,
+        };
+        
+      case 'evaluate':
+        const evalResult = await page.evaluate(check.fn);
+        return {
+          type: check.type,
+          passed: !!evalResult,
+          actual: evalResult,
+          error: evalResult ? null : 'Evaluation returned falsy value',
+        };
+        
+      default:
+        return {
+          type: check.type,
+          passed: false,
+          error: `Unknown check type: ${check.type}`,
+        };
+    }
+  } catch (error) {
+    return {
+      type: check.type,
+      passed: false,
       error: error.message,
     };
   }

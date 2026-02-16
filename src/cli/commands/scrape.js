@@ -21,6 +21,7 @@ const scrapeCommand = new Command('scrape')
   .option('-p, --proxy <proxy>', 'Proxy URL (socks5://host:port)')
   .option('--rotate-proxy', 'Rotate through proxy list')
   .option('--parallel <n>', 'Number of parallel tasks', parseInt)
+  .option('-r, --retry <n>', 'Number of retry attempts on failure', parseInt, 0)
   .option('-o, --output <format>', 'Output format: json, csv', 'json')
   .option('--headful', 'Run browser in visible mode (not headless)')
   .option('--notify', 'Send notification on completion')
@@ -62,12 +63,13 @@ const scrapeCommand = new Command('scrape')
       // Prepare proxy
       let proxy = options.proxy || config.proxy || null;
       const rotateProxy = options.rotateProxy || config.rotateProxy || false;
+      const maxRetries = options.retry || config.retry || 0;
       
       // Execute scraping
       const results = [];
       
       if (concurrency === 1) {
-        // Single task
+        // Single task - with optional retry
         const browserSession = await browserManager.createBrowserSession({
           proxy,
           storageState,
@@ -75,11 +77,29 @@ const scrapeCommand = new Command('scrape')
         });
         
         for (const url of urls) {
-          const result = await scraper.scrape(browserSession.page, {
-            ...config,
-            url,
-          });
-          results.push(result);
+          let lastError;
+          let attempt = 0;
+          
+          for (attempt = 1; attempt <= maxRetries + 1; attempt++) {
+            try {
+              const result = await scraper.scrape(browserSession.page, {
+                ...config,
+                url,
+              });
+              results.push(result);
+              break;
+            } catch (error) {
+              lastError = error;
+              logger.warn(`URL ${url} attempt ${attempt} failed: ${error.message}`);
+              if (attempt <= maxRetries) {
+                await new Promise(resolve => setTimeout(resolve, attempt * 1000));
+              }
+            }
+          }
+          
+          if (attempt > maxRetries + 1) {
+            results.push({ url, error: lastError?.message || 'Unknown error' });
+          }
         }
         
         await browserSession.context.close();
@@ -95,10 +115,32 @@ const scrapeCommand = new Command('scrape')
           headless: !options.headful,
         }));
         
-        const taskResults = await taskRunner.runWithProxies(taskConfigs, {
-          concurrency,
-          rotateProxy,
-        });
+        let taskResults;
+        if (maxRetries > 0) {
+          // Use runWithRetry when retry is enabled
+          const tasks = taskConfigs.map(taskConfig => async () => {
+            const browserSession = await browserManager.createBrowserSession({
+              proxy: taskConfig.proxy,
+              storageState: taskConfig.storageState,
+              headless: taskConfig.headless,
+            });
+            try {
+              return await scraper.scrape(browserSession.page, taskConfig);
+            } finally {
+              if (browserSession.context) {
+                await browserSession.context.close();
+              }
+            }
+          });
+          
+          taskResults = await taskRunner.runWithRetry(tasks, maxRetries, concurrency);
+        } else {
+          // Use runWithProxies for normal parallel execution
+          taskResults = await taskRunner.runWithProxies(taskConfigs, {
+            concurrency,
+            rotateProxy,
+          });
+        }
         
         results.push(...taskResults.map(r => r.result).filter(Boolean));
       }
