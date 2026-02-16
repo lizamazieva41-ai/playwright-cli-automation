@@ -10,7 +10,11 @@
     "start": "node src/index.js",
     "test": "jest",
     "test:unit": "jest tests/unit",
-    "test:integration": "jest tests/integration"
+    "test:integration": "jest tests/integration",
+    "lint": "eslint src/",
+    "lint:fix": "eslint src/ --fix",
+    "prepublishOnly": "npm test",
+    "prepare": "husky"
   },
   "keywords": [
     "playwright",
@@ -19,20 +23,42 @@
     "web-scraping",
     "stealth"
   ],
-  "author": "",
+  "author": "Your Name <email@example.com>",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lizamazieva41-ai/playwright-cli-automation.git"
+  },
+  "homepage": "https://github.com/lizamazieva41-ai/playwright-cli-automation#readme",
+  "bugs": {
+    "url": "https://github.com/lizamazieva41-ai/playwright-cli-automation/issues"
+  },
+  "files": [
+    "src/",
+    "config/",
+    "examples/",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE"
+  ],
   "dependencies": {
-    "playwright": "^1.40.0",
+    "cli-progress": "^3.12.0",
     "commander": "^11.1.0",
-    "winston": "^3.11.0",
-    "dotenv": "^16.3.1",
-    "nodemailer": "^6.9.7",
     "csv-writer": "^1.6.0",
+    "dotenv": "^16.3.1",
+    "nodemailer": "^8.0.1",
     "p-limit": "3.1.0",
-    "cli-progress": "^3.12.0"
+    "playwright": "^1.40.0",
+    "winston": "^3.11.0"
   },
   "devDependencies": {
-    "jest": "^29.7.0"
+    "eslint": "^8.57.1",
+    "husky": "^9.1.7",
+    "jest": "^29.7.0",
+    "lint-staged": "^16.2.7"
+  },
+  "lint-staged": {
+    "*.js": "eslint --fix"
   },
   "engines": {
     "node": ">=18.0.0"
