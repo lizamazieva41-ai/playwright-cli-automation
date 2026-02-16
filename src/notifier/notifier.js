@@ -19,7 +19,7 @@ class Notifier {
       this.channels.push('slack');
     }
     
-    logger.info(`Notifier initialized with channels: ${this.channels.join(', ') || 'none'}`);
+    logger.debug(`Notifier initialized with channels: ${this.channels.join(', ') || 'none'}`);
   }
 
   /**
@@ -40,25 +40,25 @@ class Notifier {
     for (const channel of channels) {
       try {
         switch (channel) {
-          case 'email':
-            if (type === 'task') {
-              results.email = await emailNotifier.sendTaskNotification(data);
-            } else if (type === 'error') {
-              results.email = await emailNotifier.sendErrorNotification(data.error, data.context);
-            } else if (type === 'custom') {
-              results.email = await emailNotifier.sendEmail(data.subject, data.body, data.options);
-            }
-            break;
+        case 'email':
+          if (type === 'task') {
+            results.email = await emailNotifier.sendTaskNotification(data);
+          } else if (type === 'error') {
+            results.email = await emailNotifier.sendErrorNotification(data.error, data.context);
+          } else if (type === 'custom') {
+            results.email = await emailNotifier.sendEmail(data.subject, data.body, data.options);
+          }
+          break;
             
-          case 'slack':
-            if (type === 'task') {
-              results.slack = await slackNotifier.sendTaskNotification(data);
-            } else if (type === 'error') {
-              results.slack = await slackNotifier.sendErrorNotification(data.error, data.context);
-            } else if (type === 'custom') {
-              results.slack = await slackNotifier.sendRichMessage(data.title, data.message, data.color);
-            }
-            break;
+        case 'slack':
+          if (type === 'task') {
+            results.slack = await slackNotifier.sendTaskNotification(data);
+          } else if (type === 'error') {
+            results.slack = await slackNotifier.sendErrorNotification(data.error, data.context);
+          } else if (type === 'custom') {
+            results.slack = await slackNotifier.sendRichMessage(data.title, data.message, data.color);
+          }
+          break;
         }
       } catch (error) {
         logger.error(`Failed to send ${channel} notification:`, error);

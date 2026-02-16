@@ -12,9 +12,9 @@ class SlackNotifier {
     this.initialized = !!this.webhookUrl;
     
     if (!this.initialized) {
-      logger.warn('Slack notifier not configured - missing webhook URL');
+      logger.debug('Slack notifier not configured - missing webhook URL');
     } else {
-      logger.info('Slack notifier initialized');
+      logger.debug('Slack notifier initialized');
     }
   }
 

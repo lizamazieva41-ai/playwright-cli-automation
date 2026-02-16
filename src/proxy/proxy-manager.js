@@ -22,7 +22,7 @@ class ProxyManager {
     // Load from config
     if (config.proxy.list && config.proxy.list.length > 0) {
       this.proxies = config.proxy.list;
-      logger.info(`Loaded ${this.proxies.length} proxies from config`);
+      logger.debug(`Loaded ${this.proxies.length} proxies from config`);
     }
 
     // Try to load from file
@@ -36,11 +36,11 @@ class ProxyManager {
       
       if (fileProxies.length > 0) {
         this.proxies = [...new Set([...this.proxies, ...fileProxies])];
-        logger.info(`Loaded ${fileProxies.length} proxies from file`);
+        logger.debug(`Loaded ${fileProxies.length} proxies from file`);
       }
     }
 
-    logger.info(`Total proxies loaded: ${this.proxies.length}`);
+    logger.debug(`Total proxies loaded: ${this.proxies.length}`);
   }
 
   /**

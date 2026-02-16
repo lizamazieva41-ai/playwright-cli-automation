@@ -32,7 +32,7 @@ describe('Browser Session Integration', () => {
     context = await browser.newContext();
     page = await context.newPage();
     
-    await page.goto('https://example.com', { waitUntil: 'domcontentloaded' });
+    await page.goto('https://example.com', { waitUntil: 'domcontentloaded', timeout: 30000 });
     const title = await page.title();
     
     expect(title).toContain('Example');
@@ -43,7 +43,7 @@ describe('Browser Session Integration', () => {
     context = await browser.newContext();
     page = await context.newPage();
     
-    await page.goto('https://example.com');
+    await page.goto('https://example.com', { timeout: 30000 });
     await context.close();
     
     // Context should be closed

@@ -14,7 +14,7 @@
     "lint": "eslint src/",
     "lint:fix": "eslint src/ --fix",
     "prepublishOnly": "npm test",
-    "prepare": "husky"
+    "prepare": "husky || true"
   },
   "keywords": [
     "playwright",

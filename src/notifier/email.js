@@ -18,7 +18,7 @@ class EmailNotifier {
    */
   initializeTransporter() {
     if (!config.smtp.user || !config.smtp.pass) {
-      logger.warn('Email notifier not configured - missing SMTP credentials');
+      logger.debug('Email notifier not configured - missing SMTP credentials');
       return;
     }
 
@@ -32,7 +32,7 @@ class EmailNotifier {
       },
     });
 
-    logger.info('Email transporter initialized');
+    logger.debug('Email transporter initialized');
   }
 
   /**
