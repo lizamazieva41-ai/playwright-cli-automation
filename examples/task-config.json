@@ -1,0 +1,39 @@
+{
+  "name": "example-task",
+  "description": "Example multi-task configuration",
+  "tasks": [
+    {
+      "type": "scrape",
+      "config": {
+        "url": "https://example.com/page1",
+        "selectors": {
+          "content": ".main-content"
+        }
+      }
+    },
+    {
+      "type": "scrape",
+      "config": {
+        "url": "https://example.com/page2",
+        "selectors": {
+          "content": ".main-content"
+        }
+      }
+    },
+    {
+      "type": "test",
+      "config": {
+        "url": "https://example.com",
+        "checks": [
+          {
+            "name": "Homepage loads",
+            "type": "element-exists",
+            "selector": "body"
+          }
+        ]
+      }
+    }
+  ],
+  "concurrency": 3,
+  "continueOnError": true
+}

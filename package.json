@@ -1,0 +1,39 @@
+{
+  "name": "playwright-cli-automation",
+  "version": "1.0.0",
+  "description": "CLI browser automation with Playwright - Firefox, stealth, proxy, parallel execution",
+  "main": "src/index.js",
+  "bin": {
+    "autobot": "./src/index.js"
+  },
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "jest",
+    "test:unit": "jest tests/unit",
+    "test:integration": "jest tests/integration"
+  },
+  "keywords": [
+    "playwright",
+    "browser-automation",
+    "cli",
+    "web-scraping",
+    "stealth"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "playwright": "^1.40.0",
+    "commander": "^11.1.0",
+    "winston": "^3.11.0",
+    "dotenv": "^16.3.1",
+    "nodemailer": "^6.9.7",
+    "csv-writer": "^1.6.0",
+    "p-limit": "3.1.0"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

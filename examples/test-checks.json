@@ -1,0 +1,40 @@
+{
+  "name": "example-test",
+  "description": "Example web test configuration",
+  "url": "https://example.com",
+  "checks": [
+    {
+      "name": "Homepage loads",
+      "type": "element-exists",
+      "selector": "body"
+    },
+    {
+      "name": "Logo visible",
+      "type": "element-visible",
+      "selector": ".logo"
+    },
+    {
+      "name": "No console errors",
+      "type": "no-errors"
+    },
+    {
+      "name": "Page title contains",
+      "type": "title-contains",
+      "value": "Example"
+    },
+    {
+      "name": "Login form exists",
+      "type": "element-exists",
+      "selector": "form.login-form"
+    }
+  ],
+  "viewport": {
+    "width": 1920,
+    "height": 1080
+  },
+  "screenshotOnFail": true,
+  "output": {
+    "format": "json",
+    "filename": "test-results.json"
+  }
+}

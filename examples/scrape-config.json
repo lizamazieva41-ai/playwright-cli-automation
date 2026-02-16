@@ -1,0 +1,23 @@
+{
+  "name": "example-scrape",
+  "description": "Example scrape configuration",
+  "urls": [
+    "https://example.com/products",
+    "https://example.com/products?page=2",
+    "https://example.com/products?page=3"
+  ],
+  "selectors": {
+    "items": ".product-item",
+    "title": ".product-title",
+    "price": ".product-price",
+    "description": ".product-description",
+    "image": "img.product-image"
+  },
+  "parallel": 2,
+  "retry": 3,
+  "timeout": 30000,
+  "output": {
+    "format": "json",
+    "filename": "scrape-results.json"
+  }
+}
