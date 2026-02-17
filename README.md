@@ -303,6 +303,33 @@ npm run docker:build
 docker run --rm -e NODE_ENV=production -p 3000:3000 autobot:latest
 ```
 
+Docker image (GitHub Container Registry — GHCR)
+
+[![GHCR Image](https://img.shields.io/badge/ghcr.io-lizamazieva41-ai%2Fplaywright--cli--automation-blue)](https://github.com/lizamazieva41-ai/packages)
+
+You can pull the published image from GHCR (image is pushed by CI on tag/release):
+
+```bash
+# public image (no auth required if image is public)
+docker pull ghcr.io/lizamazieva41-ai/playwright-cli-automation:latest
+
+docker run --rm -e NODE_ENV=production -p 3000:3000 ghcr.io/lizamazieva41-ai/playwright-cli-automation:latest
+```
+
+If the image is private, authenticate with a PAT that has `read:packages` scope:
+
+```bash
+# on CI or local: set CR_PAT (Personal Access Token)
+echo "$CR_PAT" | docker login ghcr.io -u YOUR_GITHUB_USERNAME --password-stdin
+
+docker pull ghcr.io/lizamazieva41-ai/playwright-cli-automation:latest
+```
+
+Notes:
+- CI workflow `docker-publish.yml` builds and pushes the image when you create a release/tag (vX.Y.Z).
+- Replace `latest` with a specific tag (recommended for production deployments).
+
+
 Health checks:
 
 - Shallow check: `GET /health` → basic process/session/proxy counters
