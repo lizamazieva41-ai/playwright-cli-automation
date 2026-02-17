@@ -11,6 +11,9 @@ COPY package*.json ./
 # Install production dependencies
 RUN npm install --production --no-audit --progress=false
 
+# Install Playwright browsers to match the installed version
+RUN npx playwright install firefox --with-deps
+
 # Copy application source
 COPY . .
 

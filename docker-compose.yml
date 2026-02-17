@@ -1,0 +1,45 @@
+services:
+  playwright-automation:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: lalalaala/playwright-cli-automation:latest
+    container_name: playwright-automation-prod
+    restart: unless-stopped
+    command: ["node", "src/index.js", "health"]
+    environment:
+      - NODE_ENV=production
+      - HEALTH_PORT=3000
+      - BROWSER_HEADLESS=true
+      - BROWSER_VIEWPORT_WIDTH=1920
+      - BROWSER_VIEWPORT_HEIGHT=1080
+      - BROWSER_TIMEOUT=30000
+      - LOG_LEVEL=info
+      - DEFAULT_CONCURRENCY=3
+      - MAX_CONCURRENCY=10
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./data/sessions:/usr/src/app/data/sessions
+      - ./data/output:/usr/src/app/data/output
+      - ./data/logs:/usr/src/app/data/logs
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks:
+      - playwright-network
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '1'
+          memory: 1G
+
+networks:
+  playwright-network:
+    driver: bridge
