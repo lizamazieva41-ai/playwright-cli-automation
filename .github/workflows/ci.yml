@@ -28,9 +28,14 @@ jobs:
 
       - name: Install Playwright browsers
         run: npx playwright install --with-deps firefox
+        env:
+          PLAYWRIGHT_BROWSERS_PATH: /tmp/ms-playwright
 
       - name: Run tests
         run: npm test
+        env:
+          HOME: /tmp
+          PLAYWRIGHT_BROWSERS_PATH: /tmp/ms-playwright
 
       - name: Run linter
         run: npm run lint
@@ -46,5 +51,10 @@ jobs:
         run: npm ci
       - name: Ensure Playwright browsers (container includes browsers but run if needed)
         run: npx playwright install firefox || true
+        env:
+          PLAYWRIGHT_BROWSERS_PATH: /tmp/ms-playwright
       - name: Run tests (inside Playwright image)
         run: npm test
+        env:
+          HOME: /tmp
+          PLAYWRIGHT_BROWSERS_PATH: /tmp/ms-playwright
