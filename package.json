@@ -8,6 +8,8 @@
   },
   "scripts": {
     "start": "node src/index.js",
+    "health": "node src/health/server.js",
+    "docker:build": "docker build -t autobot:latest .",
     "test": "jest",
     "test:unit": "jest tests/unit",
     "test:integration": "jest tests/integration",

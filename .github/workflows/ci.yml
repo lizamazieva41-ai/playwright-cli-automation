@@ -34,3 +34,17 @@ jobs:
 
       - name: Run linter
         run: npm run lint
+
+  playwright-container-test:
+    name: Test (Playwright Docker image)
+    runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install dependencies
+        run: npm ci
+      - name: Ensure Playwright browsers (container includes browsers but run if needed)
+        run: npx playwright install firefox || true
+      - name: Run tests (inside Playwright image)
+        run: npm test

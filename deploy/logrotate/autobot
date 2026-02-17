@@ -1,0 +1,10 @@
+/workspaces/playwright-cli-automation/data/logs/*.log {
+  daily
+  rotate 30
+  compress
+  missingok
+  notifempty
+  copytruncate
+  dateext
+  maxsize 20M
+}
