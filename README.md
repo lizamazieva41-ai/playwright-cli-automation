@@ -1,5 +1,10 @@
 # Playwright CLI Automation
 
+[![CI](https://github.com/lizamazieva41-ai/playwright-cli-automation/actions/workflows/ci.yml/badge.svg)](https://github.com/lizamazieva41-ai/playwright-cli-automation/actions)
+[![Release](https://img.shields.io/github/v/release/lizamazieva41-ai/playwright-cli-automation)](https://github.com/lizamazieva41-ai/playwright-cli-automation/releases)
+[![GHCR Image](https://img.shields.io/ghcr/v/lizamazieva41-ai/playwright-cli-automation?label=ghcr)](https://github.com/lizamazieva41-ai/packages)
+[![License](https://img.shields.io/github/license/lizamazieva41-ai/playwright-cli-automation)](LICENSE)
+
 CLI browser automation tool using Playwright with Firefox, supporting stealth browsing, SOCKS proxy, parallel execution, logging, and notifications.
 
 ## Features
