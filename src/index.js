@@ -18,6 +18,7 @@ const testCommand = require('./cli/commands/test');
 const runCommand = require('./cli/commands/run');
 const sessionCommand = require('./cli/commands/session');
 const proxyCommand = require('./cli/commands/proxy');
+const healthCommand = require('./cli/commands/health');
 
 // Import logger
 const logger = require('./logger/logger');
@@ -37,6 +38,7 @@ program.addCommand(testCommand);
 program.addCommand(runCommand);
 program.addCommand(sessionCommand);
 program.addCommand(proxyCommand);
+program.addCommand(healthCommand);
 
 // Global options
 program

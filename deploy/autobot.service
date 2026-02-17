@@ -1,0 +1,16 @@
+[Unit]
+Description=Autobot Playwright CLI
+After=network.target
+
+[Service]
+Type=simple
+User=autobot
+WorkingDirectory=/opt/playwright-cli-automation
+EnvironmentFile=/etc/autobot/autobot.env
+ExecStart=/usr/bin/node /opt/playwright-cli-automation/src/index.js run -t /opt/playwright-cli-automation/examples/task-config.json
+Restart=on-failure
+RestartSec=5
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target

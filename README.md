@@ -287,6 +287,51 @@ pm2 logs
 pm2 stop all
 ```
 
+---
+
+## Docker image & health endpoint ✅
+
+A small Dockerfile and a `/health` HTTP endpoint were added so you can run the service in a container and perform container health checks.
+
+Build and run locally:
+
+```bash
+# build image
+npm run docker:build
+
+# run container (exposes health on :3000)
+docker run --rm -e NODE_ENV=production -p 3000:3000 autobot:latest
+```
+
+Health checks:
+
+- Shallow check: `GET /health` → basic process/session/proxy counters
+- Deep check: `GET /health?deep=1` → attempts to launch a short-lived browser
+
+You can also run an ephemeral health probe from the CLI:
+
+```bash
+# one-shot shallow check
+node src/index.js health --once
+
+# one-shot deep check
+node src/index.js health --once --deep
+
+# start long-running health server
+node src/index.js health --port 3000
+```
+
+Deployment options (systemd or PM2)
+
+- Use the helper `deploy/deploy.sh` to install and register the app (see `deploy/README.md`).
+- `deploy/autobot.service` — systemd unit template (copy to `/etc/systemd/system/autobot.service`).
+- `ecosystem.config.js` — PM2 configuration already present; use `pm2 start ecosystem.config.js`.
+- Add the `deploy/logrotate/autobot` entry to your system `logrotate` configuration to rotate `data/logs/*.log`.
+
+Continuous Integration
+
+- The GitHub Actions CI runs the full test suite and includes an extra job that executes tests inside the official Playwright Docker image so browser integration tests run reliably in CI.
+
 ## Troubleshooting
 
 ### Playwright Installation Issues
