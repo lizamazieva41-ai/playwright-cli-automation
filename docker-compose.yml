@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   playwright-automation:
     build:
@@ -8,6 +6,7 @@ services:
     image: lalalaala/playwright-cli-automation:latest
     container_name: playwright-automation-prod
     restart: unless-stopped
+    command: ["node", "src/index.js", "health"]
     environment:
       - NODE_ENV=production
       - HEALTH_PORT=3000
