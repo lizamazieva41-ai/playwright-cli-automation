@@ -4,6 +4,8 @@
 
 This document formally records features and endpoints that are intentionally excluded from V1 implementation of the Windows Desktop Cloud Browser Model (Local/Self-hosted version).
 
+**IMPORTANT:** This project is NOT a MoreLogin Local API compatibility layer. While we provide similar functionality for browser profile management, we use our own API endpoint structure. The feature comparison is for functional parity, not API-level compatibility.
+
 **Version:** 1.0  
 **Last Updated:** 2026-02-19  
 **Status:** Approved

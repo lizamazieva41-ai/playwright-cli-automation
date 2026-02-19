@@ -4,6 +4,8 @@
 
 This document tracks the compatibility between MoreLogin Cloud API and our Local/Self-hosted implementation for the Windows Desktop Cloud Browser Model project.
 
+**IMPORTANT CLARIFICATION:** This is NOT a MoreLogin Local API compatibility layer. This project provides similar browser profile management functionality but uses its own API endpoint structure (`/api/profile/*`, `/api/group/*`, etc.) rather than MoreLogin's naming convention (`/api/env/*`, `/api/envgroup/*`, etc.). The parity tracking is for **functional compatibility** (features and data models), not endpoint-level compatibility.
+
 **Version:** 1.0  
 **Last Updated:** 2026-02-19  
 **Status:** In Review

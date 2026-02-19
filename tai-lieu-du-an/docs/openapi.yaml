@@ -1,7 +1,13 @@
 openapi: 3.0.3
 info:
   title: Windows Desktop Cloud Browser Model API
-  description: Local API compatible with MoreLogin Cloud Browser
+  description: |
+    Local API for browser profile management and automation.
+    
+    **IMPORTANT:** This is NOT a MoreLogin Local API compatibility layer. 
+    This is a standalone browser automation API with its own endpoint structure.
+    While it provides similar functionality to MoreLogin, the endpoint paths 
+    and naming conventions are independent.
   version: 1.0.0
   contact:
     name: API Support
@@ -26,6 +32,51 @@ tags:
     description: System and environment operations
 
 paths:
+  /profile/create:
+    post:
+      tags:
+        - Profile
+      summary: Create a new profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+              properties:
+                name:
+                  type: string
+                groupId:
+                  type: string
+                  format: uuid
+                tags:
+                  type: array
+                  items:
+                    type: string
+                    format: uuid
+                proxyId:
+                  type: string
+                  format: uuid
+                browserType:
+                  type: string
+                  enum: [firefox, chromium]
+                  default: firefox
+                userAgent:
+                  type: string
+                timezone:
+                  type: string
+                locale:
+                  type: string
+      responses:
+        '201':
+          description: Profile created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profile'
+
   /profile/list:
     get:
       tags:
@@ -65,6 +116,103 @@ paths:
                   pagination:
                     $ref: '#/components/schemas/Pagination'
 
+  /profile/detail/{id}:
+    get:
+      tags:
+        - Profile
+      summary: Get profile details
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Profile details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profile'
+        '404':
+          description: Profile not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /profile/update/{id}:
+    put:
+      tags:
+        - Profile
+      summary: Update profile
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                groupId:
+                  type: string
+                  format: uuid
+                tags:
+                  type: array
+                  items:
+                    type: string
+                    format: uuid
+                proxyId:
+                  type: string
+                  format: uuid
+                browserType:
+                  type: string
+                  enum: [firefox, chromium]
+                userAgent:
+                  type: string
+                timezone:
+                  type: string
+                locale:
+                  type: string
+      responses:
+        '200':
+          description: Profile updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profile'
+
+  /profile/delete/{id}:
+    delete:
+      tags:
+        - Profile
+      summary: Delete profile
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Profile deleted successfully
+        '404':
+          description: Profile not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
   /profile/start/{id}:
     post:
       tags:
@@ -102,6 +250,182 @@ paths:
                     format: date-time
                     example: "2026-02-19T03:07:01.991Z"
 
+  /profile/stop/{id}:
+    post:
+      tags:
+        - Profile
+      summary: Stop profile browser session
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Session stopped successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  status:
+                    type: string
+                    enum: [stopped]
+
+  /profile/status/{id}:
+    get:
+      tags:
+        - Profile
+      summary: Get profile session status
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Session status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  status:
+                    type: string
+                    enum: [active, stopped, idle]
+                  sessionId:
+                    type: string
+                    format: uuid
+                    nullable: true
+
+  /profile/duplicate/{id}:
+    post:
+      tags:
+        - Profile
+      summary: Duplicate profile
+      description: Clone profile with new ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: Name for duplicated profile (optional)
+      responses:
+        '201':
+          description: Profile duplicated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profile'
+
+  /profile/export/{id}:
+    post:
+      tags:
+        - Profile
+      summary: Export profile data
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Profile data exported
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  profile:
+                    $ref: '#/components/schemas/Profile'
+                  cookies:
+                    type: array
+                    items:
+                      type: object
+                  localStorage:
+                    type: object
+
+  /profile/import:
+    post:
+      tags:
+        - Profile
+      summary: Import profile data
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - profile
+              properties:
+                profile:
+                  type: object
+                cookies:
+                  type: array
+                  items:
+                    type: object
+                localStorage:
+                  type: object
+      responses:
+        '201':
+          description: Profile imported successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profile'
+
+  /group/create:
+    post:
+      tags:
+        - Group
+      summary: Create a new group
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+                color:
+                  type: string
+                  pattern: '^#[0-9A-Fa-f]{6}$'
+      responses:
+        '201':
+          description: Group created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Group'
+
   /group/list:
     get:
       tags:
@@ -119,6 +443,152 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/Group'
+
+  /group/detail/{id}:
+    get:
+      tags:
+        - Group
+      summary: Get group details
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Group details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Group'
+        '404':
+          description: Group not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /group/update/{id}:
+    put:
+      tags:
+        - Group
+      summary: Update group
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+                color:
+                  type: string
+                  pattern: '^#[0-9A-Fa-f]{6}$'
+      responses:
+        '200':
+          description: Group updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Group'
+
+  /group/delete/{id}:
+    delete:
+      tags:
+        - Group
+      summary: Delete group
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Group deleted successfully
+        '404':
+          description: Group not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /group/assign:
+    post:
+      tags:
+        - Group
+      summary: Assign profiles to group
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - groupId
+                - profileIds
+              properties:
+                groupId:
+                  type: string
+                  format: uuid
+                profileIds:
+                  type: array
+                  items:
+                    type: string
+                    format: uuid
+      responses:
+        '200':
+          description: Profiles assigned to group successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  groupId:
+                    type: string
+                    format: uuid
+                  assignedCount:
+                    type: integer
+
+  /tag/create:
+    post:
+      tags:
+        - Tag
+      summary: Create a new tag
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+              properties:
+                name:
+                  type: string
+                color:
+                  type: string
+                  pattern: '^#[0-9A-Fa-f]{6}$'
+      responses:
+        '201':
+          description: Tag created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tag'
 
   /tag/list:
     get:
@@ -138,6 +608,137 @@ paths:
                     items:
                       $ref: '#/components/schemas/Tag'
 
+  /tag/update/{id}:
+    put:
+      tags:
+        - Tag
+      summary: Update tag
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                color:
+                  type: string
+                  pattern: '^#[0-9A-Fa-f]{6}$'
+      responses:
+        '200':
+          description: Tag updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tag'
+
+  /tag/delete/{id}:
+    delete:
+      tags:
+        - Tag
+      summary: Delete tag
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Tag deleted successfully
+        '404':
+          description: Tag not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /tag/assign:
+    post:
+      tags:
+        - Tag
+      summary: Assign tags to profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - profileId
+                - tagIds
+              properties:
+                profileId:
+                  type: string
+                  format: uuid
+                tagIds:
+                  type: array
+                  items:
+                    type: string
+                    format: uuid
+      responses:
+        '200':
+          description: Tags assigned to profile successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  profileId:
+                    type: string
+                    format: uuid
+                  assignedCount:
+                    type: integer
+
+  /proxy/create:
+    post:
+      tags:
+        - Proxy
+      summary: Create a new proxy
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - type
+                - host
+                - port
+              properties:
+                name:
+                  type: string
+                type:
+                  type: string
+                  enum: [http, https, socks5]
+                host:
+                  type: string
+                port:
+                  type: integer
+                  minimum: 1
+                  maximum: 65535
+                username:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '201':
+          description: Proxy created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Proxy'
+
   /proxy/list:
     get:
       tags:
@@ -155,6 +756,159 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/Proxy'
+
+  /proxy/update/{id}:
+    put:
+      tags:
+        - Proxy
+      summary: Update proxy
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                type:
+                  type: string
+                  enum: [http, https, socks5]
+                host:
+                  type: string
+                port:
+                  type: integer
+                  minimum: 1
+                  maximum: 65535
+                username:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '200':
+          description: Proxy updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Proxy'
+
+  /proxy/delete/{id}:
+    delete:
+      tags:
+        - Proxy
+      summary: Delete proxy
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Proxy deleted successfully
+        '404':
+          description: Proxy not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /proxy/test/{id}:
+    post:
+      tags:
+        - Proxy
+      summary: Test proxy connection
+      description: |
+        Validates proxy connectivity by attempting a test connection through the proxy.
+        Measures latency and retrieves the public IP address visible through the proxy.
+        Used for verifying proxy configuration before assigning to profiles.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Proxy test successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  status:
+                    type: string
+                    enum: [working, failed]
+                  latency:
+                    type: integer
+                    description: Latency in milliseconds
+                  ip:
+                    type: string
+                    description: Public IP address through proxy
+
+  /env/info:
+    get:
+      tags:
+        - Environment
+      summary: Get system information
+      responses:
+        '200':
+          description: System information
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  platform:
+                    type: string
+                    example: linux
+                  arch:
+                    type: string
+                    example: x64
+                  nodeVersion:
+                    type: string
+                    example: v18.0.0
+                  memory:
+                    type: object
+                    properties:
+                      total:
+                        type: integer
+                      free:
+                        type: integer
+
+  /env/version:
+    get:
+      tags:
+        - Environment
+      summary: Get API version info
+      responses:
+        '200':
+          description: API version information
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  version:
+                    type: string
+                    example: 1.0.0
+                  apiVersion:
+                    type: string
+                    example: v1
+                  build:
+                    type: string
 
   /env/cache/cleanCloud:
     get:

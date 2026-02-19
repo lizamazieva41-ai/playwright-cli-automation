@@ -374,6 +374,108 @@ class DocConsistencyChecker {
     }
   }
 
+  /**
+   * Parse OpenAPI YAML file and extract all endpoints
+   */
+  parseOpenAPI(filePath) {
+    if (!fs.existsSync(filePath)) {
+      this.error(`OpenAPI file not found: ${filePath}`);
+      return null;
+    }
+
+    const content = fs.readFileSync(filePath, 'utf8');
+    const endpoints = new Set();
+    
+    // Extract all paths from OpenAPI YAML
+    // Look for lines like "  /profile/create:" or "  /group/list:"
+    // Resource types: profile, group, tag, proxy, env (environment)
+    const pathRegex = /^\s{2}\/(profile|group|tag|proxy|env)\/[^:]+:/gm;
+    let match;
+    
+    while ((match = pathRegex.exec(content)) !== null) {
+      // Extract the path without the colon
+      const path = match[0].trim().slice(0, -1);
+      endpoints.add(path);
+    }
+    
+    return endpoints;
+  }
+
+  /**
+   * Extract endpoints from parity matrix
+   */
+  extractParityEndpoints(filePath) {
+    const content = fs.readFileSync(filePath, 'utf8');
+    const endpoints = new Set();
+    
+    // Extract endpoints from table rows
+    // Look for rows like "| POST /api/profile/create | ✓ | ✓ | Full | ... |"
+    const endpointRegex = /^\|\s+(GET|POST|PUT|DELETE)\s+(\/api\/[^\s|]+)/gm;
+    let match;
+    
+    while ((match = endpointRegex.exec(content)) !== null) {
+      const method = match[1];
+      const path = match[2];
+      
+      // Remove /api prefix to match OpenAPI format
+      const normalizedPath = path.replace(/^\/api/, '');
+      
+      // Convert Express-style params (:id) to OpenAPI format ({id})
+      // This reconciles the different parameter conventions used in the two documents
+      const openApiPath = normalizedPath.replace(/:(\w+)/g, '{$1}');
+      
+      endpoints.add(openApiPath);
+    }
+    
+    return endpoints;
+  }
+
+  checkOpenAPICompleteness(parityPath, openApiPath) {
+    this.log('\n🔌 Checking OpenAPI Completeness...', 'cyan');
+    this.checks++;
+
+    const parityEndpoints = this.extractParityEndpoints(parityPath);
+    const openApiEndpoints = this.parseOpenAPI(openApiPath);
+    
+    if (!openApiEndpoints) {
+      this.error('Failed to parse OpenAPI file');
+      return;
+    }
+
+    this.log(`  Parity Matrix endpoints: ${parityEndpoints.size}`);
+    this.log(`  OpenAPI endpoints: ${openApiEndpoints.size}`);
+
+    // Check if all parity endpoints are in OpenAPI
+    const missingInOpenApi = [];
+    for (const endpoint of parityEndpoints) {
+      if (!openApiEndpoints.has(endpoint)) {
+        missingInOpenApi.push(endpoint);
+      }
+    }
+
+    // Check if there are extra endpoints in OpenAPI not in parity
+    const extraInOpenApi = [];
+    for (const endpoint of openApiEndpoints) {
+      if (!parityEndpoints.has(endpoint)) {
+        extraInOpenApi.push(endpoint);
+      }
+    }
+
+    if (missingInOpenApi.length === 0 && extraInOpenApi.length === 0) {
+      this.success('All parity matrix endpoints documented in OpenAPI');
+    } else {
+      if (missingInOpenApi.length > 0) {
+        this.error(`${missingInOpenApi.length} endpoints in parity matrix missing from OpenAPI:`);
+        missingInOpenApi.forEach(ep => this.log(`    - ${ep}`, 'red'));
+      }
+      
+      if (extraInOpenApi.length > 0) {
+        this.warning(`${extraInOpenApi.length} extra endpoints in OpenAPI not in parity matrix:`);
+        extraInOpenApi.forEach(ep => this.log(`    - ${ep}`, 'yellow'));
+      }
+    }
+  }
+
   run() {
     this.log('='.repeat(70), 'blue');
     this.log('📋 Documentation Consistency Checker', 'blue');
@@ -382,6 +484,7 @@ class DocConsistencyChecker {
     const docsDir = path.join(__dirname, '../../docs');
     const parityPath = path.join(docsDir, '14-parity-matrix.md');
     const exceptionsPath = path.join(docsDir, 'scope-exceptions.md');
+    const openApiPath = path.join(docsDir, 'openapi.yaml');
 
     // Parse parity matrix
     const data = this.parseParityMatrix(parityPath);
@@ -397,6 +500,7 @@ class DocConsistencyChecker {
     this.checkPartialDefinitions(parityPath);
     this.checkComputedFieldDocumentation(parityPath);
     this.checkScopeExceptions(parityPath, exceptionsPath);
+    this.checkOpenAPICompleteness(parityPath, openApiPath);
 
     // Print summary
     this.log('\n' + '='.repeat(70), 'blue');
