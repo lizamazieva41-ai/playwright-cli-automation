@@ -22,6 +22,7 @@
     "test:acceptance": "./tests/acceptance/run-acceptance-tests.sh",
     "lint": "eslint src/",
     "lint:fix": "eslint src/ --fix",
+    "docs:check": "node tai-lieu-du-an/scripts/doc-consistency-check/check.js",
     "prepublishOnly": "npm test",
     "prepare": "husky || true"
   },
