@@ -388,6 +388,7 @@ class DocConsistencyChecker {
     
     // Extract all paths from OpenAPI YAML
     // Look for lines like "  /profile/create:" or "  /group/list:"
+    // Resource types: profile, group, tag, proxy, env (environment)
     const pathRegex = /^\s{2}\/(profile|group|tag|proxy|env)\/[^:]+:/gm;
     let match;
     
@@ -419,7 +420,8 @@ class DocConsistencyChecker {
       // Remove /api prefix to match OpenAPI format
       const normalizedPath = path.replace(/^\/api/, '');
       
-      // Normalize parameter syntax: /:id -> /{id}
+      // Convert Express-style params (:id) to OpenAPI format ({id})
+      // This reconciles the different parameter conventions used in the two documents
       const openApiPath = normalizedPath.replace(/:(\w+)/g, '{$1}');
       
       endpoints.add(openApiPath);

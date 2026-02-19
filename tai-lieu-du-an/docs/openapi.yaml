@@ -826,7 +826,10 @@ paths:
       tags:
         - Proxy
       summary: Test proxy connection
-      description: Local proxy validation
+      description: |
+        Validates proxy connectivity by attempting a test connection through the proxy.
+        Measures latency and retrieves the public IP address visible through the proxy.
+        Used for verifying proxy configuration before assigning to profiles.
       parameters:
         - name: id
           in: path
