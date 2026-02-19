@@ -1,0 +1,392 @@
+openapi: 3.0.3
+info:
+  title: Windows Desktop Cloud Browser Model API
+  description: Local API compatible with MoreLogin Cloud Browser
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: support@example.com
+
+servers:
+  - url: http://localhost:3000/api
+    description: Local development server
+  - url: http://127.0.0.1:3000/api
+    description: Local loopback
+
+tags:
+  - name: Profile
+    description: Profile management operations
+  - name: Group
+    description: Group management operations
+  - name: Tag
+    description: Tag management operations
+  - name: Proxy
+    description: Proxy management operations
+  - name: Environment
+    description: System and environment operations
+
+paths:
+  /profile/list:
+    get:
+      tags:
+        - Profile
+      summary: List all profiles
+      parameters:
+        - name: groupId
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Profile'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+
+  /profile/start/{id}:
+    post:
+      tags:
+        - Profile
+      summary: Start profile browser session
+      description: |
+        Launches browser session for the specified profile.
+        Updates lastUsedAt timestamp to current time.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Session started successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  sessionId:
+                    type: string
+                    format: uuid
+                  status:
+                    type: string
+                    enum: [active]
+                  lastUsedAt:
+                    type: string
+                    format: date-time
+                    example: "2026-02-19T03:07:01.991Z"
+
+  /group/list:
+    get:
+      tags:
+        - Group
+      summary: List all groups
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Group'
+
+  /tag/list:
+    get:
+      tags:
+        - Tag
+      summary: List all tags
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Tag'
+
+  /proxy/list:
+    get:
+      tags:
+        - Proxy
+      summary: List all proxies
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Proxy'
+
+  /env/cache/cleanCloud:
+    get:
+      tags:
+        - Environment
+      summary: Clean cloud cache (Not Implemented)
+      description: |
+        Cloud-only feature not available in self-hosted version.
+        See scope-exceptions.md for details.
+      responses:
+        '501':
+          description: Not Implemented
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  schemas:
+    Profile:
+      type: object
+      required:
+        - id
+        - name
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique profile identifier
+        name:
+          type: string
+          description: Profile name
+        groupId:
+          type: string
+          format: uuid
+          nullable: true
+          description: Group association
+        tags:
+          type: array
+          items:
+            type: string
+            format: uuid
+          description: Associated tag IDs
+        proxyId:
+          type: string
+          format: uuid
+          nullable: true
+          description: Proxy configuration
+        browserType:
+          type: string
+          enum: [firefox, chromium]
+          default: firefox
+        userAgent:
+          type: string
+          description: Custom user agent string
+        timezone:
+          type: string
+          description: IANA timezone identifier
+          example: America/New_York
+        locale:
+          type: string
+          description: Locale code
+          example: en-US
+        createdAt:
+          type: string
+          format: date-time
+          description: Creation timestamp (ISO 8601 UTC)
+          example: "2026-02-19T03:07:01.991Z"
+        updatedAt:
+          type: string
+          format: date-time
+          description: Last update timestamp (ISO 8601 UTC)
+          example: "2026-02-19T03:07:01.991Z"
+        lastUsedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: |
+            Last session start timestamp (ISO 8601 UTC).
+            Updated only when profile session starts.
+            See 14-parity-matrix.md Section 4 for details.
+          example: "2026-02-19T03:07:01.991Z"
+
+    Group:
+      type: object
+      required:
+        - id
+        - name
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          description: Group name
+        description:
+          type: string
+          nullable: true
+        color:
+          type: string
+          pattern: '^#[0-9A-Fa-f]{6}$'
+          description: Hex color code
+          example: "#FF5733"
+        profileCount:
+          type: integer
+          minimum: 0
+          description: |
+            Computed field: number of profiles in this group.
+            Calculated via: SELECT COUNT(*) FROM profiles WHERE groupId = ?
+            See 14-parity-matrix.md Section 3 for details.
+        createdAt:
+          type: string
+          format: date-time
+          example: "2026-02-19T03:07:01.991Z"
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2026-02-19T03:07:01.991Z"
+
+    Tag:
+      type: object
+      required:
+        - id
+        - name
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        color:
+          type: string
+          pattern: '^#[0-9A-Fa-f]{6}$'
+          example: "#FF0000"
+        profileCount:
+          type: integer
+          minimum: 0
+          description: |
+            Computed field: number of profiles with this tag.
+            Calculated via: SELECT COUNT(*) FROM profile_tags WHERE tagId = ?
+        createdAt:
+          type: string
+          format: date-time
+          example: "2026-02-19T03:07:01.991Z"
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2026-02-19T03:07:01.991Z"
+
+    Proxy:
+      type: object
+      required:
+        - id
+        - name
+        - type
+        - host
+        - port
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        type:
+          type: string
+          enum: [http, https, socks5]
+        host:
+          type: string
+        port:
+          type: integer
+          minimum: 1
+          maximum: 65535
+        username:
+          type: string
+          nullable: true
+        password:
+          type: string
+          nullable: true
+          writeOnly: true
+        profileCount:
+          type: integer
+          minimum: 0
+          description: |
+            Computed field: number of profiles using this proxy.
+            Calculated via: SELECT COUNT(*) FROM profiles WHERE proxyId = ?
+        createdAt:
+          type: string
+          format: date-time
+          example: "2026-02-19T03:07:01.991Z"
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2026-02-19T03:07:01.991Z"
+
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+          minimum: 1
+        limit:
+          type: integer
+          minimum: 1
+          maximum: 100
+        total:
+          type: integer
+          minimum: 0
+
+    Error:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          description: Error type
+        message:
+          type: string
+          description: Human-readable error message
+        code:
+          type: string
+          description: Machine-readable error code
+        details:
+          type: object
+          description: Additional error details
+
